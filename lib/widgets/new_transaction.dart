@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
+import '../models/providers/transaction_provider.dart';
+import '../models/transaction.dart';
 
 class NewTraction extends StatefulWidget {
-  final Function addTx;
-  const NewTraction(this.addTx, {super.key});
+  const NewTraction({super.key});
 
   @override
   State<NewTraction> createState() => _NewTractionState();
@@ -13,7 +15,7 @@ class _NewTractionState extends State<NewTraction> {
   final _titleController = TextEditingController();
   final _amountController = TextEditingController();
   DateTime? _selectedDate;
-  void _submitData() {
+  void _submitData(TransactionProvider txprovider) {
     if (_amountController.text.isEmpty) {
       return;
     }
@@ -22,7 +24,13 @@ class _NewTractionState extends State<NewTraction> {
     if (title.isEmpty || amount <= 0 || _selectedDate == null) {
       return;
     }
-    widget.addTx(title, amount, _selectedDate);
+    // widget.addTx(title, amount, _selectedDate);
+    txprovider.add(Transaction(
+      id: '',
+      title: title,
+      amount: amount,
+      date: _selectedDate!,
+    ));
     Navigator.of(context).pop();
   }
 
@@ -44,6 +52,7 @@ class _NewTractionState extends State<NewTraction> {
 
   @override
   Widget build(BuildContext context) {
+    final txprovider = Provider.of<TransactionProvider>(context, listen: false);
     return Card(
       child: Container(
           padding: const EdgeInsets.all(10),
@@ -79,7 +88,7 @@ class _NewTractionState extends State<NewTraction> {
             ),
             ElevatedButton(
                 style: TextButton.styleFrom(backgroundColor: Colors.purple),
-                onPressed: _submitData,
+                onPressed: () => _submitData(txprovider),
                 child: const Text('Add Transaction'))
           ])),
     );

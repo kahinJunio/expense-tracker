@@ -1,13 +1,40 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import '../models/transaction.dart';
+import 'package:provider/provider.dart';
+import '../models/providers/transaction_provider.dart';
 
-class TransactionList extends StatelessWidget {
-  final Function deleteTransaction;
-  const TransactionList(this.transactions, this.deleteTransaction, {super.key});
-  final List<Transaction> transactions;
+class TransactionList extends StatefulWidget {
+  const TransactionList({
+    super.key,
+  });
+
+  @override
+  State<TransactionList> createState() => _TransactionListState();
+}
+
+class _TransactionListState extends State<TransactionList> {
+  var _isLoading = false;
+  @override
+  void initState() {
+    super.initState();
+    Future.delayed(Duration.zero).then((_) {
+      setState(() {
+        _isLoading = true;
+      });
+      Provider.of<TransactionProvider>(context, listen: false)
+          .getAllTx()
+          .then((value) {
+        setState(() {
+          _isLoading = false;
+        });
+      });
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
+    final transactions = Provider.of<TransactionProvider>(context).transactions;
+    print(transactions.length);
     return Container(
       child: transactions.isEmpty
           ? Column(
@@ -52,8 +79,7 @@ class TransactionList extends StatelessWidget {
                       DateFormat.yMMMMd().format(transactions[index].date),
                     ),
                     trailing: IconButton(
-                      onPressed: () =>
-                          deleteTransaction(transactions[index].id),
+                      onPressed: () {},
                       icon: const Icon(Icons.delete),
                       color: Theme.of(context).errorColor,
                       tooltip: 'Delete transaction',

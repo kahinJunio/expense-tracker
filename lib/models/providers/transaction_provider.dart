@@ -102,4 +102,16 @@ class TransactionProvider with ChangeNotifier {
       print(error);
     }
   }
+
+  Future<void> removeItem(String id) async {
+    try {
+      final url = Uri.https('expensetracker-2b853-default-rtdb.firebaseio.com',
+          '/transactions.json/$id.json');
+      await http.delete(url);
+      _transactions.removeWhere((tranc) => tranc.id == id);
+      notifyListeners();
+    } catch (error) {
+      print(error);
+    }
+  }
 }

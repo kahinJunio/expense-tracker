@@ -3,40 +3,16 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import '../models/providers/transaction_provider.dart';
 
-class TransactionList extends StatefulWidget {
+class TransactionList extends StatelessWidget {
   const TransactionList({
     super.key,
   });
 
   @override
-  State<TransactionList> createState() => _TransactionListState();
-}
-
-class _TransactionListState extends State<TransactionList> {
-  var _isLoading = false;
-  @override
-  void initState() {
-    super.initState();
-    Future.delayed(Duration.zero).then((_) {
-      setState(() {
-        _isLoading = true;
-      });
-      Provider.of<TransactionProvider>(context, listen: false)
-          .getAllTx()
-          .then((value) {
-        setState(() {
-          _isLoading = false;
-        });
-      });
-    });
-  }
-
-  @override
   Widget build(BuildContext context) {
-    final transactions = Provider.of<TransactionProvider>(context).transactions;
-    print(transactions.length);
+    final transactions = Provider.of<TransactionProvider>(context);
     return Container(
-      child: transactions.isEmpty
+      child: transactions.transactions.isEmpty
           ? Column(
               children: [
                 Text(
@@ -66,20 +42,25 @@ class _TransactionListState extends State<TransactionList> {
                         padding: const EdgeInsets.all(6.0),
                         child: FittedBox(
                           child: Text(
-                            '\$${transactions[index].amount}',
+                            '\$${transactions.transactions[index].amount}',
                           ),
                         ),
                       ),
                     ),
                     title: Text(
-                      transactions[index].title,
+                      transactions.transactions[index].title,
                       style: Theme.of(context).textTheme.headline6,
                     ),
                     subtitle: Text(
-                      DateFormat.yMMMMd().format(transactions[index].date),
+                      DateFormat.yMMMMd()
+                          .format(transactions.transactions[index].date),
                     ),
                     trailing: IconButton(
-                      onPressed: () {},
+                      onPressed: () async {
+                        await transactions.removeItem(
+                          transactions.transactions[index].id,
+                        );
+                      },
                       icon: const Icon(Icons.delete),
                       color: Theme.of(context).errorColor,
                       tooltip: 'Delete transaction',
@@ -87,7 +68,7 @@ class _TransactionListState extends State<TransactionList> {
                   ),
                 );
               },
-              itemCount: transactions.length,
+              itemCount: transactions.transactions.length,
             ),
     );
   }

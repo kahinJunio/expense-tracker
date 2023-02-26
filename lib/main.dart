@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import './widgets/new_transaction.dart';
@@ -40,40 +39,69 @@ class MyApp extends StatelessWidget {
   }
 }
 
-class MyHomePage extends StatelessWidget {
+class MyHomePage extends StatefulWidget {
   const MyHomePage({super.key});
+
+  @override
+  State<MyHomePage> createState() => _MyHomePageState();
+}
+
+class _MyHomePageState extends State<MyHomePage> {
+  var _isLoading = false;
+  @override
+  void initState() {
+    super.initState();
+    Future.delayed(Duration.zero).then((value) {
+      setState(() {
+        _isLoading = true;
+      });
+      Provider.of<TransactionProvider>(context, listen: false)
+          .getAllTx()
+          .then((value) {
+        setState(() {
+          _isLoading = false;
+        });
+      });
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final mediaQuery = MediaQuery.of(context);
-    final isLandScape = mediaQuery.orientation == Orientation.landscape;
     final dynamic appBar = _buildAppBar(context);
+    final transactions = Provider.of<TransactionProvider>(context);
 
-    final txList = SizedBox(
-        height: (mediaQuery.size.height -
-                appBar.preferredSize.height -
-                mediaQuery.padding.top) *
-            0.7,
-        child: const TransactionList());
-    final appBody = SafeArea(
-        child: SingleChildScrollView(
-            child: Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      mainAxisAlignment: MainAxisAlignment.start,
-      children: [
-        if (!isLandScape) ..._buildPortraitContent(mediaQuery, appBar, txList),
-      ],
-    )));
     return Scaffold(
       resizeToAvoidBottomInset: true,
       appBar: appBar,
       drawer: const AppDrawer(),
-      body: appBody,
-      floatingActionButton: Platform.isIOS
-          ? Container()
-          : FloatingActionButton(
-              child: const Icon(Icons.add),
-              onPressed: () => _startAddNewTransaction(context),
+      body: _isLoading
+          ? const Center(
+              child: CircularProgressIndicator(),
+            )
+          : Column(
+              children: [
+                SizedBox(
+                  height: (mediaQuery.size.height -
+                          appBar.preferredSize.height -
+                          mediaQuery.padding.top) *
+                      0.3,
+                  child: Chart(
+                      transactions: transactions.groupedTransactionValues),
+                ),
+                SizedBox(
+                  height: (mediaQuery.size.height -
+                          appBar.preferredSize.height -
+                          mediaQuery.padding.top) *
+                      0.7,
+                  child: const TransactionList(),
+                )
+              ],
             ),
+      floatingActionButton: FloatingActionButton(
+        child: const Icon(Icons.add),
+        onPressed: () => _startAddNewTransaction(context),
+      ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
     );
   }
@@ -88,20 +116,6 @@ void _startAddNewTransaction(BuildContext context) {
           child: const NewTraction(),
         )),
   );
-}
-
-List<Widget> _buildPortraitContent(
-    MediaQueryData mediaQuery, AppBar appBar, Widget txList) {
-  return [
-    SizedBox(
-      height: (mediaQuery.size.height -
-              appBar.preferredSize.height -
-              mediaQuery.padding.top) *
-          0.3,
-      child: const Chart(),
-    ),
-    txList
-  ];
 }
 
 Widget _buildAppBar(BuildContext context) {
